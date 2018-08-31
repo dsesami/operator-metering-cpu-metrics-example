@@ -1,7 +1,7 @@
 # Using Operator Metering for Processing of CPU Metrics
 
 ### Disclaimer:
-This example assumes you have [Operator Meter]() installed and running on an [OpenShift]() instance. See [this directory]() for significantly more detailed information on the architecture and usage of Operator Metering. 
+This example assumes you have [Operator Metering](https://github.com/operator-framework/operator-metering) installed and running on an [OpenShift](https://www.openshift.com/) instance. See [this directory](https://github.com/operator-framework/operator-metering/tree/master/Documentation) for significantly more detailed information on the architecture and usage of Operator Metering. 
 
 
 ## Goals
@@ -20,7 +20,7 @@ We will also create a scheduled report that lists the hourly peak CPU usage (the
 [Here is the documentation on how to label pods (or any object) in OpenShift/Kubernetes.](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/)
 
 ## Background
-Operator Metering uses [Prometheus]() to query OpenShift instances for raw data. The data collected will be based on what Prometheus can access. If it can see every project/cluster, then every single pod that is labeled correctly, regardless of its namespace, will appear in the query result.
+Operator Metering uses [Prometheus](https://prometheus.io/) to query OpenShift instances for raw data. The data collected will be based on what Prometheus can access. If it can see every project/cluster, then every single pod that is labeled correctly, regardless of its namespace, will appear in the query result.
 
 Operator Metering provides a few custom OpenShift/Kubernetes resources for use. There are several built in instances of these resource types, which provide raw information about CPU and memory usage. For example, you can try `oc get reportgenerationqueries` to see available queries to use in metering reports. Here is a summary of the resource types:
 - **ReportPrometheusQuery**: This tells Prometheus which data to search for inside of the OpenShift instance. In the example, this is `kube-pod-label-reportprometheusquery.yaml`, and contains the filter for the resource label. To look for a label, the query is prefixed with `label_` and all periods in the label key (not the value itself) are replaced with underscores.So to search for the resource label `com.example.product="demo-product"`, the filter is `label_com_example_product="demo-product"`.
