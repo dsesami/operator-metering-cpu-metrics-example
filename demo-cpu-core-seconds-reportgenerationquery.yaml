@@ -1,0 +1,67 @@
+apiVersion: metering.openshift.io/v1alpha1
+kind: ReportGenerationQuery
+metadata:
+  name: demo-cpu-core-seconds-total
+spec:
+  columns:
+  - name: period_start
+    type: timestamp
+    unit: date
+  - name: period_end
+    type: timestamp
+    unit: date
+  - name: pod
+    type: string
+    unit: kubernetes_pod
+  - name: namespace
+    type: string
+    unit: kubernetes_namespace
+  - name: node
+    type: string
+    unit: kubernetes_node
+  - name: data_start
+    type: timestamp
+    unit: date
+  - name: data_end
+    type: timestamp
+    unit: date
+  - name: pod_usage_cpu_core_seconds_total
+    type: double
+    unit: cpu_core_seconds
+  - name: label
+    type: string
+  query: |
+    SELECT
+        timestamp '{| .Report.StartPeriod| prestoTimestamp |}' AS period_start,
+        timestamp '{| .Report.EndPeriod | prestoTimestamp |}' AS period_end,
+        C.pod,
+        C.namespace,
+        C.node,
+        min(C."timestamp") as data_start,
+        max(C."timestamp") as data_end,
+        sum(pod_usage_cpu_core_seconds) as pod_usage_cpu_core_seconds_total,
+        T.product_label as label
+    FROM {| generationQueryViewName "pod-cpu-usage-raw" |} as C
+    INNER JOIN (
+        SELECT B.labels['pod'] as pod, B.labels['namespace'] as namespace, B.labels['label_com_example_product'] as product_label, MIN(ABS(date_diff('second', A."timestamp", B."timestamp"))) AS min_abs_timestamp_diff
+        FROM {| generationQueryViewName "pod-cpu-usage-raw" |} AS A
+        CROSS JOIN {| dataSourceTableName "kube-pod-label-demo" |} B
+        WHERE A."timestamp" >= timestamp '{|.Report.StartPeriod | prestoTimestamp |}'
+        AND A."timestamp" <= timestamp '{| .Report.EndPeriod | prestoTimestamp |}'
+        AND B."timestamp" >= timestamp '{|.Report.StartPeriod | prestoTimestamp |}'
+        AND B."timestamp" <= timestamp '{| .Report.EndPeriod | prestoTimestamp |}'
+        GROUP BY B.labels['pod'], B.labels['namespace'], B.labels['label_com_example_product']
+    ) T
+      ON C.pod = T.pod
+      AND C.namespace = T.namespace
+      AND T.min_abs_timestamp_diff <= C.timeprecision
+    WHERE C."timestamp" >= timestamp '{|.Report.StartPeriod | prestoTimestamp |}'
+    AND C."timestamp" <= timestamp '{| .Report.EndPeriod | prestoTimestamp |}'
+    GROUP BY C.namespace, C.pod, C.node, T.product_label
+    ORDER BY C.namespace, C.pod, C.node ASC, pod_usage_cpu_core_seconds_total DESC
+  reportDataSources:
+  - kube-pod-label-demo
+  reportQueries:
+  - pod-cpu-usage-raw
+  view:
+    disabled: true

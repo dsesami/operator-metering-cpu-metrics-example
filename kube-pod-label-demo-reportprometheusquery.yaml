@@ -1,7 +1,7 @@
 apiVersion: metering.openshift.io/v1alpha1
 kind: ReportPrometheusQuery
 metadata:
- name: kube-pod-label-jboss
+ name: kube-pod-label-demo
 spec:
  query: |
-   kube_pod_labels{label_com_redhat_product="jboss-eap"}
+   kube_pod_labels{label_com_example_product="demo-product"}

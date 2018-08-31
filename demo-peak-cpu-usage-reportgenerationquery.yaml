@@ -1,10 +1,10 @@
 apiVersion: metering.openshift.io/v1alpha1
 kind: ReportGenerationQuery
 metadata:
-  name: "jboss-peak-cpu-usage"
+  name: "demo-peak-cpu-usage"
 spec:
   reportDataSources:
-  - "kube-pod-label-jboss"
+  - "kube-pod-label-demo"
   - "pod-usage-cpu-cores"
   view:
     disabled: true
@@ -21,12 +21,12 @@ spec:
     SELECT
         C.labels['namespace'] as project,
         C.labels['pod_name'] as pod,
-        L.labels['label_com_redhat_product'] as label,
+        L.labels['label_com_example_product'] as label,
         max(C.amount) as used_cores
     FROM {| dataSourceTableName "pod-usage-cpu-cores" |} as C
-    JOIN {| dataSourceTableName "kube-pod-label-jboss" |} as L
+    JOIN {| dataSourceTableName "kube-pod-label-demo" |} as L
         ON C.labels['pod_name'] = L.labels['pod']
     WHERE C."timestamp" >= timestamp '{|.Report.StartPeriod | prestoTimestamp |}'
         AND C."timestamp" <= timestamp '{| .Report.EndPeriod | prestoTimestamp |}'
-    GROUP BY C.labels['namespace'], C.labels['pod_name'], L.labels['label_com_redhat_product']
+    GROUP BY C.labels['namespace'], C.labels['pod_name'], L.labels['label_com_example_product']
     ORDER BY project ASC, used_cores DESC

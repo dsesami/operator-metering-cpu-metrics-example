@@ -1,9 +1,9 @@
 apiVersion: metering.openshift.io/v1alpha1
 kind: Report
 metadata:
-  name: jboss-cpu-core-seconds-usage
+  name: demo-cpu-core-seconds-usage
 spec:
   reportingStart: '2018-08-30T15:24:30Z'
   reportingEnd: '2018-08-30T15:34:30Z'
-  generationQuery: "jboss-cpu-core-seconds"
+  generationQuery: "demo-cpu-core-seconds-total"
   runImmediately: true
