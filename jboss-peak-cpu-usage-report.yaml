@@ -1,0 +1,9 @@
+apiVersion: metering.openshift.io/v1alpha1
+kind: Report
+metadata:
+  name: jboss-peak-cpu-usage
+spec:
+  reportingStart: '2018-08-28T14:52:57Z'
+  reportingEnd: '2018-08-28T14:54:57Z'
+  generationQuery: "jboss-cpu-usage"
+  runImmediately: false
