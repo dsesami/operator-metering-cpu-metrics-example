@@ -1,0 +1,9 @@
+apiVersion: metering.openshift.io/v1alpha1
+kind: Report
+metadata:
+  name: CORE_SECONDS_REPORT_NAME
+spec:
+  reportingStart: 'START_TIME'
+  reportingEnd: 'END_TIME'
+  generationQuery: 'GENERATION_QUERY'
+  runImmediately: true
