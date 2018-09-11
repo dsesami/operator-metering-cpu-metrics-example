@@ -32,6 +32,44 @@ Operator Metering provides a few custom OpenShift/Kubernetes resources for use. 
 ### Summary of Background
 A ReportDataSource tells Operator Metering to use a particular ReportPrometheusQuery (to zone in on the labeled pods we want) to capture data using available ReportGenerationQueries (to identify exactly what data we want). Once the ReportGenerationQuery that you want has been running, you can use a Report or a ScheduledReport to generate a report on whatever data you need.
 
+## Creating a Stress Test
+If you would like to use some dummy images to demonstrate CPU strain, follow these steps. Note that Operator Metering will only be looking for images with the proper label, and it does not care what the images actually _are_ in this case.
+### Creating a Stress Image:
+If you do not have a DockerHub account, create one. This will allow you to host images that can be imported into OpenShift. Assign your username to an environment variable called DOCKER_ID_USER. In bash this can be done with `export DOCKER_ID_USER=username`.
+
+1. In your desired directory, `git clone` https://github.com/simon3z/docker-stress-test.git
+2. `cd docker-stress-test`
+3. Go into the `Dockerfile` and add the line `LABEL com.example.product="demo-product"`
+4. To import from DockerHub: `docker login docker.io`
+5. `docker build [path to docker stress test dir]/docker-stress-test`
+6. Use `docker images` to list out all the available images. Find the stress test image as it is untagged when built with this repo. The image may have a name like c27504b5a55d, which we will use in this example.
+7. We can give our image a more readable name, like Stresser A. Here, it is tagged with `docker tag c27504b5a55d/$DOCKER_ID_USER/stressera`.
+8. Push your image to DockerHub: `docker push docker.io/$DOCKER_ID_USER/stressera`
+9. Import the image into OpenShift: `oc import-image docker.io/$DOCKER_ID_USER/stressera --confirm`.
+
+### Running stress tests
+You can create as many Docker stress test images as you like and import them. 
+First, determine what the running instance is of your stress test with `oc get pods`. It will be of the format `stressera-gkjpr`, with a randomized suffix of the stress container name.
+
+To stress an image, run a command of the following format:
+```
+oc exec [CONTAINER_NAME] -- stress -c [NUMBER OF CORES] -t [STRESS TIME IN SECONDS] &
+```
+The `&` will run the process in the background. As such, an example command to stress 2 cores for 120 seconds (2 minutes) might look like:
+```
+oc exec stressera-gkjpr -- stress -c 2 -t 120 &
+```
+
+You should make note of the time the stress test started, in UTC time. On many systems this can be done by running the `date` command.
+To get the start time in a format we can use in reports, we can run:
+```
+date --utc +%FT%TZ
+```
+To get an exact start time, you can chain the commands:
+```
+date --utc +%FT%TZ; oc exec stressera-gkjpr # and so forth.
+```
+
 ## Workflow for Creating a Manual Report
 Assuming you have the YAML files provided with this directory, and you have an OpenShift instance running with pods that have been labeled `com.example.product=demo-product`. 
 
@@ -80,3 +118,6 @@ Create the scheduled report so it starts accumulating the data into the report o
 oc create -f demo-peak-cpu-usage-scheduledreport.yaml
 ```
 Wait some time for hourly reports to accumulate, then use `oc proxy` and `curl` as detailed in the section on manual reports, with the adjustments in the notes.
+
+## Automation (in progress)
+This workflow can be automated to an extent. If you have created everything minus the Report/ScheduledReport objects, you can use stresstest.sh to perform a container stress test. The shell script will automatically build a report YAML file that runs for the duration of the stress test.
