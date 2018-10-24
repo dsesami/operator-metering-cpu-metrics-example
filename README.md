@@ -34,6 +34,7 @@ A ReportDataSource tells Operator Metering to use a particular ReportPrometheusQ
 
 ## Creating a Stress Test
 If you would like to use some dummy images to demonstrate CPU strain, follow these steps. Note that Operator Metering will only be looking for images with the proper label, and it does not care what the images actually _are_ in this case.
+
 ### Creating a Stress Image:
 If you do not have a DockerHub account, create one. This will allow you to host images that can be imported into OpenShift. Assign your username to an environment variable called DOCKER_ID_USER. In bash this can be done with `export DOCKER_ID_USER=username`.
 
@@ -43,13 +44,23 @@ If you do not have a DockerHub account, create one. This will allow you to host 
 4. To import from DockerHub: `docker login docker.io`
 5. `docker build [path to docker stress test dir]/docker-stress-test`
 6. Use `docker images` to list out all the available images. Find the stress test image as it is untagged when built with this repo. The image may have a name like c27504b5a55d, which we will use in this example.
-7. We can give our image a more readable name, like Stresser A. Here, it is tagged with `docker tag c27504b5a55d/$DOCKER_ID_USER/stressera`.
+7. We can give our image a more readable name, like Stresser A. Here, it is tagged with `docker tag c27504b5a55d docker.io/$DOCKER_ID_USER/stressera`.
 8. Push your image to DockerHub: `docker push docker.io/$DOCKER_ID_USER/stressera`
 9. Import the image into OpenShift: `oc import-image docker.io/$DOCKER_ID_USER/stressera --confirm`.
 
 ### Running stress tests
+
 You can create as many Docker stress test images as you like and import them. 
-First, determine what the running instance is of your stress test with `oc get pods`. It will be of the format `stressera-gkjpr`, with a randomized suffix of the stress container name.
+
+##### Creating Stress Test instance
+
+If there are no created stress instances, they can be created using `oc run`:
+
+```
+oc run --image=docker.io/$DOCKER_ID_USER/stressera stressera
+```
+
+Next, determine what the running instance is of your stress test with `oc get pods`. It will be of the format `[instance-name]-#-kdjef`, with a randomized suffix of the stress container name. For example, `stresser1-1-cqc79`.
 
 To stress an image, run a command of the following format:
 ```
@@ -57,7 +68,7 @@ oc exec [CONTAINER_NAME] -- stress -c [NUMBER OF CORES] -t [STRESS TIME IN SECON
 ```
 The `&` will run the process in the background. As such, an example command to stress 2 cores for 120 seconds (2 minutes) might look like:
 ```
-oc exec stressera-gkjpr -- stress -c 2 -t 120 &
+oc exec stresser1-1-cqc79 -- stress -c 2 -t 120 &
 ```
 
 You should make note of the time the stress test started, in UTC time. On many systems this can be done by running the `date` command.
@@ -67,7 +78,7 @@ date --utc +%FT%TZ
 ```
 To get an exact start time, you can chain the commands:
 ```
-date --utc +%FT%TZ; oc exec stressera-gkjpr # and so forth.
+date --utc +%FT%TZ; oc exec stresser1-1-cqc79 # and so forth.
 ```
 
 ## Workflow for Creating a Manual Report
