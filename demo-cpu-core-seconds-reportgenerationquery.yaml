@@ -32,8 +32,8 @@ spec:
     type: string
   query: |
     SELECT
-        timestamp '{| .Report.StartPeriod| prestoTimestamp |}' AS period_start,
-        timestamp '{| .Report.EndPeriod | prestoTimestamp |}' AS period_end,
+        timestamp '{| .Report.ReportingStart| prestoTimestamp |}' AS period_start,
+        timestamp '{| .Report.ReportingEnd | prestoTimestamp |}' AS period_end,
         C.pod,
         C.namespace,
         C.node,
@@ -46,17 +46,17 @@ spec:
         SELECT B.labels['pod'] as pod, B.labels['namespace'] as namespace, B.labels['label_com_example_product'] as product_label, MIN(ABS(date_diff('second', A."timestamp", B."timestamp"))) AS min_abs_timestamp_diff
         FROM {| generationQueryViewName "pod-cpu-usage-raw" |} AS A
         CROSS JOIN {| dataSourceTableName "kube-pod-label-demo" |} B
-        WHERE A."timestamp" >= timestamp '{|.Report.StartPeriod | prestoTimestamp |}'
-        AND A."timestamp" <= timestamp '{| .Report.EndPeriod | prestoTimestamp |}'
-        AND B."timestamp" >= timestamp '{|.Report.StartPeriod | prestoTimestamp |}'
-        AND B."timestamp" <= timestamp '{| .Report.EndPeriod | prestoTimestamp |}'
+        WHERE A."timestamp" >= timestamp '{|.Report.ReportingStart | prestoTimestamp |}'
+        AND A."timestamp" <= timestamp '{| .Report.ReportingEnd | prestoTimestamp |}'
+        AND B."timestamp" >= timestamp '{|.Report.ReportingStart | prestoTimestamp |}'
+        AND B."timestamp" <= timestamp '{| .Report.ReportingEnd | prestoTimestamp |}'
         GROUP BY B.labels['pod'], B.labels['namespace'], B.labels['label_com_example_product']
     ) T
       ON C.pod = T.pod
       AND C.namespace = T.namespace
       AND T.min_abs_timestamp_diff <= C.timeprecision
-    WHERE C."timestamp" >= timestamp '{|.Report.StartPeriod | prestoTimestamp |}'
-    AND C."timestamp" <= timestamp '{| .Report.EndPeriod | prestoTimestamp |}'
+    WHERE C."timestamp" >= timestamp '{|.Report.ReportingStart | prestoTimestamp |}'
+    AND C."timestamp" <= timestamp '{| .Report.ReportingEnd | prestoTimestamp |}'
     GROUP BY C.namespace, C.pod, C.node, T.product_label
     ORDER BY C.namespace, C.pod, C.node ASC, pod_usage_cpu_core_seconds_total DESC
   reportDataSources:
