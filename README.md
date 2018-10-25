@@ -60,23 +60,29 @@ If there are no created stress instances, they can be created using `oc run`:
 oc run --image=docker.io/$DOCKER_ID_USER/stressera stressera
 ```
 
-Next, determine what the running instance is of your stress test with `oc get pods`. It will be of the format `[instance-name]-#-kdjef`, with a randomized suffix of the stress container name. For example, `stresser1-1-cqc79`.
+Next, determine what the running instance is of your stress test with `oc get pods`. It will be of the format `[instance-name]-[deployment-#]-[random-suffic]`, so look for the name. For example, the one created in the previous step shows up as `stresser1-1-cqc79`.
 
 To stress an image, run a command of the following format:
+
 ```
 oc exec [CONTAINER_NAME] -- stress -c [NUMBER OF CORES] -t [STRESS TIME IN SECONDS] &
 ```
+
 The `&` will run the process in the background. As such, an example command to stress 2 cores for 120 seconds (2 minutes) might look like:
+
 ```
 oc exec stresser1-1-cqc79 -- stress -c 2 -t 120 &
 ```
 
 You should make note of the time the stress test started, in UTC time. On many systems this can be done by running the `date` command.
 To get the start time in a format we can use in reports, we can run:
+
 ```
 date --utc +%FT%TZ
 ```
+
 To get an exact start time, you can chain the commands:
+
 ```
 date --utc +%FT%TZ; oc exec stresser1-1-cqc79 # and so forth.
 ```
