@@ -60,7 +60,11 @@ If there are no created stress instances, they can be created using `oc run`:
 oc run --image=docker.io/$DOCKER_ID_USER/stressera stressera
 ```
 
+##### Get instance name
+
 Next, determine what the running instance is of your stress test with `oc get pods`. It will be of the format `[instance-name]-[deployment-#]-[random-suffic]`, so look for the name. For example, the one created in the previous step shows up as `stresser1-1-cqc79`.
+
+##### Stress an instance
 
 To stress an image, run a command of the following format:
 
