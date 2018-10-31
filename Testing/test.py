@@ -1,23 +1,28 @@
-from kubernetes import client, config
-import datetime
-# Configs can be set in Configuration class directly or using helper utility
-config.load_kube_config()
-v1 = client.CoreV1Api()
+"""Some functions to help with automated testing"""
 
-def get_pod_names(namespace= "openshift-metering"):
+import datetime
+import kubernetes
+
+# Configs can be set in Configuration class directly or using helper utility
+
+def init():
+    """Initialize connection to kubernetes"""
+    kubernetes.config.load_kube_config()
+    conn = kubernetes.client.CoreV1Api()
+    return conn
+
+def get_pod_names(conn, namespace="openshift-metering"):
     """Returns a list of the names of pods in the namespace"""
-    ret = v1.list_pod_for_all_namespaces(watch=False)
+    ret = conn.list_pod_for_all_namespaces(watch=False)
     for i in ret.items:
-        if "openshift-metering" in i.metadata.namespace:
+        if namespace in i.metadata.namespace:
             print(i.metadata.name)
 
 def get_utc_timestamp():
     """Returns the current UTC Time in proper format"""
-    d = datetime.datetime.utcnow()
+    date = datetime.datetime.utcnow()
     fmt_str = '{:04}-{:02}-{:02}T{:02}:{:02}:{:02}Z'
-    return(fmt_str.format(d.year, d.month, d.day, d.hour, d.minute, d.second))
+    return fmt_str.format(date.year, date.month, date.day, date.hour, date.minute, date.second)
 
 print("Listing pods with their IPs:")
-time = get_utc_timestamp()
-print(time)
-get_pod_names()    
+get_pod_names(init())
