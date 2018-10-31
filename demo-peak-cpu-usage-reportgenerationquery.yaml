@@ -26,7 +26,7 @@ spec:
     FROM {| dataSourceTableName "pod-usage-cpu-cores" |} as C
     JOIN {| dataSourceTableName "kube-pod-label-demo" |} as L
         ON C.labels['pod_name'] = L.labels['pod']
-    WHERE C."timestamp" >= timestamp '{|.Report.StartPeriod | prestoTimestamp |}'
-        AND C."timestamp" <= timestamp '{| .Report.EndPeriod | prestoTimestamp |}'
+    WHERE C."timestamp" >= timestamp '{|.Report.ReportingStart | prestoTimestamp |}'
+        AND C."timestamp" <= timestamp '{| .Report.ReportingEnd | prestoTimestamp |}'
     GROUP BY C.labels['namespace'], C.labels['pod_name'], L.labels['label_com_example_product']
     ORDER BY project ASC, used_cores DESC
