@@ -20,10 +20,10 @@ def get_pod_names(conn, namespace="openshift-metering"):
         if namespace in i.metadata.namespace:
             print(i.metadata.name)
 
-def new_project(api_instance, project_name, pretty="pretty_example"):
+def new_project(api_instance, project_name, pretty="pretty"):
     """Creates a new openshift project (like oc new-project)"""
     body = openshift.client.V1Project()
-    body.metadata = kubernetes.client.V1ObjectMeta(name= project_name)
+    body.metadata = kubernetes.client.V1ObjectMeta(name=project_name)
     try:
         api_response = api_instance.create_project(body, pretty=pretty)
         pprint(api_response)
@@ -31,9 +31,18 @@ def new_project(api_instance, project_name, pretty="pretty_example"):
         print("Exception when calling ProjectOpenshiftIoV1Api->create_project: %s\n"
               % api_exception)
 
+def delete_project(api_instance, project_name, pretty="pretty"):
+    """Deletes an openshift project"""
+    try:
+        api_response = api_instance.delete_project(project_name, pretty=pretty)
+        pprint(api_response)
+    except kubernetes.client.rest.ApiException as api_exception:
+        print("Exception when calling ProjectOpenshiftIoV1Api->delete_project: %s\n"
+              % api_exception)
+
 def get_projects():
     """Returns a list of the projects"""
-    
+
 
 def run_container():
     """Runs a container (like oc run)"""
