@@ -72,8 +72,8 @@ def get_projects():
     """Returns a list of the projects"""
 
 
-def create_pod(api, name, image, args, namespace='default'):
-    """Create a new pod"""
+def create_pod_manifest(name, image, args):
+    """Creates and returns a pod_manifest for create_pod()"""
     pod_manifest = {
         'apiVersion': 'v1',
         'kind': 'Pod',
@@ -88,6 +88,12 @@ def create_pod(api, name, image, args, namespace='default'):
             }]
         }
     }
+    return pod_manifest
+
+
+def create_pod(api, name, image, args, namespace='default'):
+    """Create a new pod"""
+    pod_manifest = create_pod_manifest(name, image, args)
     resp = api.create_namespaced_pod(body=pod_manifest,
                                      namespace=namespace)
     while True:
