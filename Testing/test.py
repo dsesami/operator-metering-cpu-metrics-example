@@ -5,6 +5,9 @@ import datetime
 from pprint import pprint
 import openshift
 import kubernetes
+from kubernetes.client import Configuration
+
+
 
 ## Openshift OC-like functions
 
@@ -31,7 +34,7 @@ def create_core_api_instance():
     kubernetes.config.load_kube_config()
     conf = kubernetes.client.Configuration()
     conf.assert_hostname = False
-    kubernetes.client.Configuration.set_default(conf)
+    Configuration.set_default(conf)
     api = kubernetes.client.CoreV1Api()
     return api
 
@@ -104,72 +107,12 @@ def create_pod(api, name, namespace='default'):
 
 def exec_pod(api, name, exec_command, namespace=None):
     """executes a pod"""
-    resp = kubernetes.stream(api.connect_get_namespaced_pod_exec, name, namespace,
-                             command=exec_command)
-    commands = ["echo test1"]
-    while resp.is_open():
-        resp.update(timeout=1)
-        if resp.peek_stdout():
-            print("STDOUT: %s" % resp.read_stdout())
-        if resp.peek_stderr():
-            print("STDERR: %s" % resp.read_stderr())
-        if commands:
-            c = commands.pop(0)
-            print("Running command... %s\n" % c)
-            resp.write_stdin(c + "\n")
-        else:
-            break
-    resp.write_stdin("date\n")
-    sdate = resp.readline_stdout(timeout=3)
-    print("Server date command returns: %s" % sdate)
-    resp.write_stdin("whoami\n")
-    user = resp.readline_stdout(timeout=3)
-    print("Server user is: %s" % user)
-    resp.close()
-
-def messy_exec_pod(api, name):
-    # calling exec and wait for response.
-    exec_command = [
-        '/bin/sh',
-        '-c',
-        'echo This message goes to stderr >&2; echo This message goes to stdout']
-    resp = kubernetes.stream(api.connect_get_namespaced_pod_exec, name, 'default',
-                  command=exec_command,
-                  stderr=True, stdin=False,
-                  stdout=True, tty=False)
-    print("Response: " + resp)
-    # Calling exec interactively.
-    exec_command = ['/bin/sh']
-    resp = stream(api.connect_get_namespaced_pod_exec, name, 'default',
-                  command=exec_command,
-                  stderr=True, stdin=True,
-                  stdout=True, tty=False,
-                  _preload_content=False)
-    commands = [
-        "echo test1",
-        "echo \"This message goes to stderr\" >&2",
-    ]
-    while resp.is_open():
-        resp.update(timeout=1)
-        if resp.peek_stdout():
-            print("STDOUT: %s" % resp.read_stdout())
-        if resp.peek_stderr():
-            print("STDERR: %s" % resp.read_stderr())
-        if commands:
-            c = commands.pop(0)
-            print("Running command... %s\n" % c)
-            resp.write_stdin(c + "\n")
-        else:
-            break
-    resp.write_stdin("date\n")
-    sdate = resp.readline_stdout(timeout=3)
-    print("Server date command returns: %s" % sdate)
-    resp.write_stdin("whoami\n")
-    user = resp.readline_stdout(timeout=3)
-    print("Server user is: %s" % user)
-    resp.close()
-
-
+    response_message = kubernetes.stream.stream(api.connect_get_namespaced_pod_exec,
+                                                name, namespace,
+                                                command=exec_command,
+                                                stderr=True, stdin=True,
+                                                stdout=True, tty=False)
+    return response_message
 
 def get_containers(conn, namespace=None):
     """Returns a list of contaienr names"""
