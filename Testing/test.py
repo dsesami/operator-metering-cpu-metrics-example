@@ -1,5 +1,6 @@
 """Some functions to help with automated testing"""
 
+import time
 import datetime
 from pprint import pprint
 import openshift
@@ -13,7 +14,7 @@ def init():
     conn = kubernetes.client.CoreV1Api()
     return conn
 
-def create_api_instance():
+def create_api_client_instance():
     """Creates and returns an API instance to use"""
     configuration = openshift.client.Configuration()
     ## Need to add API key stuff here????
@@ -22,6 +23,18 @@ def create_api_instance():
         openshift.client.ApiClient(configuration)
     )
     return api_instance
+
+def create_core_api_instance():
+    """Creates core api instance"""
+    ### Too many of these functions. I'll have to figure out what they
+    ### actually are and clean them up then...
+    kubernetes.config.load_kube_config()
+    conf = kubernetes.client.Configuration()
+    conf.assert_hostname = False
+    kubernetes.client.Configuration.set_default(conf)
+    api = kubernetes.client.CoreV1Api()
+    return api
+
 
 def get_pod_names(conn, namespace="openshift-metering"):
     """Returns a list of the names of pods in the namespace"""
@@ -57,8 +70,105 @@ def get_projects():
     """Returns a list of the projects"""
 
 
-def run_container():
-    """Runs a container (like oc run)"""
+def create_pod(api, name, namespace='default'):
+    """Create a new pod"""
+    ## TODO: abstract this to it's own function
+    pod_manifest = {
+        'apiVersion': 'v1',
+        'kind': 'Pod',
+        'metadata': {
+            'name': name
+        },
+        'spec': {
+            'containers': [{
+                'image': 'busybox',
+                'name': 'sleep',
+                "args": [
+                    "/bin/sh",
+                    "-c",
+                    "while true;do date;sleep 5; done"
+                ]
+            }]
+        }
+    }
+    resp = api.create_namespaced_pod(body=pod_manifest,
+                                     namespace=namespace)
+    while True:
+        resp = api.read_namespaced_pod(name=name,
+                                       namespace=namespace)
+        if resp.status.phase != 'Pending':
+            break
+        time.sleep(1)
+    print("Done.")
+    return resp
+
+def exec_pod(api, name, exec_command, namespace=None):
+    """executes a pod"""
+    resp = kubernetes.stream(api.connect_get_namespaced_pod_exec, name, namespace,
+                             command=exec_command)
+    commands = ["echo test1"]
+    while resp.is_open():
+        resp.update(timeout=1)
+        if resp.peek_stdout():
+            print("STDOUT: %s" % resp.read_stdout())
+        if resp.peek_stderr():
+            print("STDERR: %s" % resp.read_stderr())
+        if commands:
+            c = commands.pop(0)
+            print("Running command... %s\n" % c)
+            resp.write_stdin(c + "\n")
+        else:
+            break
+    resp.write_stdin("date\n")
+    sdate = resp.readline_stdout(timeout=3)
+    print("Server date command returns: %s" % sdate)
+    resp.write_stdin("whoami\n")
+    user = resp.readline_stdout(timeout=3)
+    print("Server user is: %s" % user)
+    resp.close()
+
+def messy_exec_pod(api, name):
+    # calling exec and wait for response.
+    exec_command = [
+        '/bin/sh',
+        '-c',
+        'echo This message goes to stderr >&2; echo This message goes to stdout']
+    resp = kubernetes.stream(api.connect_get_namespaced_pod_exec, name, 'default',
+                  command=exec_command,
+                  stderr=True, stdin=False,
+                  stdout=True, tty=False)
+    print("Response: " + resp)
+    # Calling exec interactively.
+    exec_command = ['/bin/sh']
+    resp = stream(api.connect_get_namespaced_pod_exec, name, 'default',
+                  command=exec_command,
+                  stderr=True, stdin=True,
+                  stdout=True, tty=False,
+                  _preload_content=False)
+    commands = [
+        "echo test1",
+        "echo \"This message goes to stderr\" >&2",
+    ]
+    while resp.is_open():
+        resp.update(timeout=1)
+        if resp.peek_stdout():
+            print("STDOUT: %s" % resp.read_stdout())
+        if resp.peek_stderr():
+            print("STDERR: %s" % resp.read_stderr())
+        if commands:
+            c = commands.pop(0)
+            print("Running command... %s\n" % c)
+            resp.write_stdin(c + "\n")
+        else:
+            break
+    resp.write_stdin("date\n")
+    sdate = resp.readline_stdout(timeout=3)
+    print("Server date command returns: %s" % sdate)
+    resp.write_stdin("whoami\n")
+    user = resp.readline_stdout(timeout=3)
+    print("Server user is: %s" % user)
+    resp.close()
+
 
 
 def get_containers(conn, namespace=None):
@@ -79,9 +189,6 @@ def get_container_matches(conn, match_string, namespace=None):
                       (lambda container_name:
                        match_string in container_name, all_container_list))
     return match_list
-
-def exec_container():
-    """Executes a command in a container (like oc exec)"""
 
 
 def scale_deployment():
