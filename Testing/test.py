@@ -5,7 +5,6 @@ import datetime
 from pprint import pprint
 import openshift
 import kubernetes
-from kubernetes.client import Configuration
 
 
 
@@ -34,7 +33,7 @@ def create_core_api_instance():
     kubernetes.config.load_kube_config()
     conf = kubernetes.client.Configuration()
     conf.assert_hostname = False
-    Configuration.set_default(conf)
+    kubernetes.client.Configuration.set_default(conf)
     api = kubernetes.client.CoreV1Api()
     return api
 
@@ -73,9 +72,8 @@ def get_projects():
     """Returns a list of the projects"""
 
 
-def create_pod(api, name, namespace='default'):
+def create_pod(api, name, image, args, namespace='default'):
     """Create a new pod"""
-    ## TODO: abstract this to it's own function
     pod_manifest = {
         'apiVersion': 'v1',
         'kind': 'Pod',
@@ -84,13 +82,9 @@ def create_pod(api, name, namespace='default'):
         },
         'spec': {
             'containers': [{
-                'image': 'busybox',
+                'image': image,
                 'name': 'sleep',
-                "args": [
-                    "/bin/sh",
-                    "-c",
-                    "while true;do date;sleep 5; done"
-                ]
+                "args": args
             }]
         }
     }
