@@ -138,9 +138,3 @@ def get_utc_timestamp():
     date = datetime.datetime.utcnow()
     fmt_str = '{:04}-{:02}-{:02}T{:02}:{:02}:{:02}Z'
     return fmt_str.format(date.year, date.month, date.day, date.hour, date.minute, date.second)
-
-## Testing Wrapepr Functions
-
-
-print("Listing pods with their IPs:")
-get_pod_names(init())
