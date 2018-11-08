@@ -7,7 +7,6 @@ import openshift
 import kubernetes
 
 
-
 ## Openshift OC-like functions
 
 def init():
@@ -33,7 +32,8 @@ def create_core_api_instance():
     kubernetes.config.load_kube_config()
     conf = kubernetes.client.Configuration()
     conf.assert_hostname = False
-    kubernetes.client.Configuration.set_default(conf)
+    # I don't think I need the line below:
+    # kubernetes.client.Configuration.set_default(conf)
     api = kubernetes.client.CoreV1Api()
     return api
 
@@ -72,6 +72,9 @@ def get_projects():
     """Returns a list of the projects"""
 
 
+def get_images():
+    """Return a list of Images"""
+
 def create_pod_manifest(name, image, args):
     """Creates and returns a pod_manifest for create_pod()"""
     pod_manifest = {
@@ -105,7 +108,7 @@ def create_pod(api, name, image, args, namespace='default'):
     print("Done.")
     return resp
 
-def exec_pod(api, name, exec_command, namespace=None):
+def exec_pod(api, name, exec_command, namespace='default'):
     """executes a pod"""
     response_message = kubernetes.stream.stream(api.connect_get_namespaced_pod_exec,
                                                 name, namespace,
