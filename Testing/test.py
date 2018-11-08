@@ -38,7 +38,7 @@ def create_core_api_instance():
     return api
 
 
-def get_pod_names(conn, namespace="openshift-metering"):
+def get_pod_names(conn, namespace="metering"):
     """Returns a list of the names of pods in the namespace"""
     ret = conn.list_pod_for_all_namespaces(watch=False)
     for i in ret.items:
