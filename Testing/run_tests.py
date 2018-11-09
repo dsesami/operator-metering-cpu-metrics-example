@@ -3,6 +3,7 @@
 import subprocess
 #import time
 import datetime
+import yaml
 #import random
 #import sys
 
@@ -26,10 +27,12 @@ def get_utc_timestamp(fmt_str='{:04}-{:02}-{:02}T{:02}:{:02}:{:02}Z'):
                                     date.second)
     return formatted_date
 
-
 ## Test Spec functions
-def load_test_spec():
+def load_test_spec(spec_src):
     """Loads the test spec"""
+    with open(spec_src, 'r') as spec_file:
+        spec = yaml.load(spec_file)
+    return spec
 
 
 ## Test Procedure Functions
@@ -61,6 +64,9 @@ def run_oc_steps():
 
     ## Exec Steps
 
+def run_procedure(spec, run_key="run"):
+    """Runs the run operations"""
+    return spec[run_key]
 
 def generate_report():
     """Generates the operator-metering report"""

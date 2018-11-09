@@ -1,0 +1,23 @@
+---
+test1:
+  description: Simplistic Validation
+  projects: radar-simplistic-validation
+  run:
+    args:
+      -n: radar-simplistic-validation
+      --image: docker.io/epacific/stresser2
+    cmd: radar-stress-1-core
+  run:
+    args:
+      -n: radar-simplistic-validation2
+      --image: docker.io/epacific/stresser2-2
+    cmd: radar-stress-1-core
+  scale: null
+  exec:
+    args:
+      -n: radar-simplistic-validation
+    pod: radar-stress-1-core
+  exec_cmd: stress -c 1 -t 120 &
+
+test2:
+  description: Multiple pods, uniform workload
