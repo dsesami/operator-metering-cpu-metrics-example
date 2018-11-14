@@ -35,6 +35,18 @@ def get_pod_names(pod_subname, namespace='default'):
     match_names = regex.findall(str(result.stdout))
     return match_names
 
+def parse_pod_name_index(subname, index_regex=r'.*\[((?:\d+)|(?:\d*:+\d*))\]'):
+    """Gets a specific podname from a list based on it's name index"""
+    regex = re.compile(index_regex)
+    match = regex.match(subname)
+    if match:
+        print("index match")
+        return_value = match.groups()[0]
+    else:
+        print("no index match")
+        return_value = None
+    return return_value
+
 ## Test Spec functions
 def load_test_spec(spec_src):
     """Loads the test spec"""
