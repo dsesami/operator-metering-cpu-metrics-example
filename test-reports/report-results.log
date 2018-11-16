@@ -1,0 +1,62 @@
+Test 1 -- Simplistic Validation
+--------------------
+Run 1:
+
+project			pod			label		used_cores
+openshift-metering	stressera-1-79vwn	demo-product	1.459690
+
+period_start			period_end			pod			namespace		node						data_start			data_end			pod_usage_cpu_core_seconds_total	label
+2018-11-16 00:05:28 +0000 UTC	2018-11-16 00:15:28 +0000 UTC	stressera-1-79vwn	openshift-metering	ip-172-31-35-194.us-west-2.compute.internal	2018-11-16 00:06:00 +0000 UTC	2018-11-16 00:11:00 +0000 UTC	110.917140				demo-product
+
+
+Run 2:
+
+project			pod			label		used_cores
+openshift-metering	stressera-1-79vwn	demo-product	1.127431
+period_start			period_end			pod			namespace		node						data_start			data_end			pod_usage_cpu_core_seconds_total	label
+2018-11-16 15:47:26 +0000 UTC	2018-11-16 15:57:26 +0000 UTC	stressera-1-79vwn	openshift-metering	ip-172-31-35-194.us-west-2.compute.internal	2018-11-16 15:48:00 +0000 UTC	2018-11-16 15:57:00 +0000 UTC	131.398920				demo-product
+
+
+
+
+Test 2 -- Multiple Pods, Uniform Workload
+--------------------
+CMD: ../timestamp; oc exec -n $METERING_NAMESPACE stressera-1-79vwn -- stress
+-c 1 -t 120 & oc exec -n $METERING_NAMESPACE stressera-1-bkxw2 -- stress -c 1
+-t 120 &
+
+----
+
+project			pod			label		used_cores
+openshift-metering	stressera-1-79vwn	demo-product	1.044035
+openshift-metering	stressera-1-bkxw2	demo-product	0.948602
+
+period_start			period_end			pod			namespace		node						data_start			data_end			pod_usage_cpu_core_seconds_total	label
+2018-11-16 17:40:34 +0000 UTC	2018-11-16 17:50:34 +0000 UTC	stressera-1-79vwn	openshift-metering	ip-172-31-35-194.us-west-2.compute.internal	2018-11-16 17:41:00 +0000 UTC	2018-11-16 17:50:00 +0000 UTC	110.888640				demo-product
+2018-11-16 17:40:34 +0000 UTC	2018-11-16 17:50:34 +0000 UTC	stressera-1-bkxw2	openshift-metering	ip-172-31-25-34.us-west-2.compute.internal	2018-11-16 17:41:00 +0000 UTC	2018-11-16 17:50:00 +0000 UTC	82.469880				demo-product
+
+----
+
+Summary: The second stressor a good bit less than the first one, and from what
+we expect. However, looking at the promethesus charts, it does seem like it's
+use dropped down during the second half of the run, so this matches that
+observation.
+
+
+
+Test 3 - Multiple Pods, varied but consistent workloads
+--------------------
+ CMD: ../timestamp; oc exec -n $METERING_NAMESPACE stressera-1-79vwn -- stress
+ -c 1 -t 120 & oc exec -n $METERING_NAMESPACE stressera2-1-wmz75 -- stress -c 2
+ -t 120 &
+
+ ----
+
+project			pod			label		used_cores
+openshift-metering	stressera-1-79vwn	demo-product	0.971094
+openshift-metering	stressera-1-bkxw2	demo-product	0.000041
+openshift-metering	stressera2-1-wmz75	demo-product	2.072637
+period_start			period_end			pod			namespace		node						data_start			data_end			pod_usage_cpu_core_seconds_total	label
+2018-11-16 18:05:10 +0000 UTC	2018-11-16 18:15:10 +0000 UTC	stressera-1-79vwn	openshift-metering	ip-172-31-35-194.us-west-2.compute.internal	2018-11-16 18:06:00 +0000 UTC	2018-11-16 18:15:00 +0000 UTC	109.829040				demo-product
+2018-11-16 18:05:10 +0000 UTC	2018-11-16 18:15:10 +0000 UTC	stressera-1-bkxw2	openshift-metering	ip-172-31-25-34.us-west-2.compute.internal	2018-11-16 18:06:00 +0000 UTC	2018-11-16 18:15:00 +0000 UTC	0.012480				demo-product
+2018-11-16 18:05:10 +0000 UTC	2018-11-16 18:15:10 +0000 UTC	stressera2-1-wmz75	openshift-metering	ip-172-31-35-194.us-west-2.compute.internal	2018-11-16 18:07:00 +0000 UTC	2018-11-16 18:15:00 +0000 UTC	227.817540				demo-product
