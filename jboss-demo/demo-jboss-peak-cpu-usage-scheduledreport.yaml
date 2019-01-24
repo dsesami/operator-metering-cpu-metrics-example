@@ -1,0 +1,12 @@
+apiVersion: metering.openshift.io/v1alpha1
+kind: ScheduledReport
+metadata:
+  name: demo-jboss-peak-cpu-usage-hourly
+spec:
+ generationQuery: "demo-jboss-peak-cpu-usage"
+ gracePeriod: "5m"
+ schedule:
+   period: "hourly"
+   hourly:
+     minute: 0
+     second: 0
