@@ -1,0 +1,7 @@
+apiVersion: metering.openshift.io/v1alpha1
+kind: ReportDataSource
+metadata:
+    name: kube-pod-label-jboss-demo
+spec:
+ promsum:
+     query: "kube-pod-label-jboss-demo"

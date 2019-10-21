@@ -98,6 +98,22 @@ Assuming you have the YAML files provided with this directory, and you have an O
 
 If you want to change the name of your resources and reports, you need to change the `metadata.name` value in the file. Bear in mind you need to change the name in any other files where that name is referenced.
 
+#### Switch to the metering project
+
+First, make sure you are in the same project/namespace as where operator-metering was installed. (Based on a section in the [ansible install documentation](https://github.com/operator-framework/operator-metering/blob/master/Documentation/ansible-install.md#verifying-operation-and-metering-usage), this *might* be set in a `$METERING_NAMESPACE` environment variable).
+
+If the environment variable is set:
+```
+oc project $METERING_NAMESPACE
+```
+
+Or, if the environment variable isn't set (assuming it's openshift-metering. Change if it's a different name).
+```
+oc project openshift-metering
+```
+
+#### Start Data Collection
+
 To create a report that measures CPU-core-seconds utilized for a given time frame:
 ```
 oc create -f kube-pod-label-demo-reportprometheusquery.yaml
@@ -106,6 +122,8 @@ oc create -f demo-cpu-core-seconds-reportgenerationquery.yaml
 ```
 Data collection will then accumulate. To create a manual report, open the `demo-cpu-core-seconds-report.yaml` file and edit the `reportingStart` and `reportingEnd` times. **Note that these times need to be in UTC time, and that the report will output timestamps in UTC.** If the `runImmediately` flag is set to false, a default 5 minute grace period will occur after the `reportingEnd` time. With this example query, the data is complex enough that you may have to give it 10+ minutes after
 reporting resolves for the query to have even populated the data -- you may successfully run the report and only have gotten blank data. If this happens, delete the report and create a new one a while later, and the fields should populate with the new report. As such, it is currently advisable to run a report start/end time that has already passed some time ago. 
+
+#### Create the Report
 
 To create the report:
 ```
